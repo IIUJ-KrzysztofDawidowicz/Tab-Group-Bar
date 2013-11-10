@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<overlay id="TabGroupBar-Overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <script type="application/x-javascript"
+            src="chrome://TabGroupBar/content/tabgroupbar.js" />
+    <toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->
+        <toolbar id="TabGroupBar-Toolbar"
+                 name="Tab Group Bar"
+                 accesskey="G"
+                 class="chromeclass-toolbar"
+                 context="toolbar-context-menu"
+                 hidden="false"
+                 persist="hidden"
+                >
+            <button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>
+            <tabbox id="TabGroupBar-TabBox">
+                <tabs id="TabGroupBar-TabBox-Tabs">
+                    <!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
+                    <!--<tab label="Second tab" oncommand=""/>-->
+                    <!--<tab label="Last tab"/>-->
+                </tabs>
+            </tabbox>
+        </toolbar>
+    </toolbox>
+</overlay>
