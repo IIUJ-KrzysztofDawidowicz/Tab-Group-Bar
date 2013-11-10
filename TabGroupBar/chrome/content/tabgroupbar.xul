@@ -5,20 +5,24 @@
             src="chrome://TabGroupBar/content/tabgroupbar.js" />
     <toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->
         <toolbar id="TabGroupBar-Toolbar"
-                 name="Tab Group Bar"
+                 toolbarname="Tab Group Bar"
                  accesskey="G"
                  class="chromeclass-toolbar"
                  context="toolbar-context-menu"
                  hidden="false"
                  persist="hidden"
                 >
-            <button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>
-            <tabbox id="TabGroupBar-TabBox">
-                <tabs id="TabGroupBar-TabBox-Tabs">
-                    <!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
-                    <!--<tab label="Second tab" oncommand=""/>-->
-                    <!--<tab label="Last tab"/>-->
-                </tabs>
+            <tabbox id="TabGroupBar-TabBox" flex="1">
+
+                <arrowscrollbox orient="horizontal">
+                    <tabs id="TabGroupBar-TabBox-Tabs">
+                        <button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>
+                        <!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
+                        <!--<tab label="Second tab" oncommand=""/>-->
+                        <!--<tab label="Last tab"/>-->
+                    </tabs>
+                </arrowscrollbox>
+
             </tabbox>
         </toolbar>
     </toolbox>

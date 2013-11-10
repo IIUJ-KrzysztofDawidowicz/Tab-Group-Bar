@@ -81,10 +81,16 @@ objTabGroupBar.addGroupTabs = function()
 //                }
 //                this.addTab(contentWindow.GroupItems.toString());
             var groupItems = contentWindow.GroupItems.groupItems;
+            var activeGroup = contentWindow.GroupItems.getActiveGroupItem();
             for (i= 0; i<groupItems.length;i++)
             {
                 this.addGroupTab(groupItems[i]);
                 this.tabsLoaded = true;
+                if(groupItems[i]==activeGroup)
+                {
+//                    tabsContainer.selectedIndex=i;
+                      tabsContainer.selectedItem=tabsContainer.lastChild;
+                }
             }
 
 };
@@ -115,10 +121,20 @@ objTabGroupBar.switchGroupTo = function(groupId)
 
 objTabGroupBar.clearTabGroups = function()
 {
-    while(tabsContainer.firstChild)
-    {
-        tabsContainer.removeChild(tabsContainer.firstChild);
-    }
+    var tabs = [];
+    tabsContainer.childNodes.forEach(function(node){
+        if(node.tagName=="tab")
+        {
+            tabs.push(node);
+        }
+    });
+    tabs.forEach(function(tab){
+        tabsContainer.removeChild(tab);
+    })
+//    while(tabsContainer.firstChild)
+//    {
+//        tabsContainer.removeChild(tabsContainer.firstChild);
+//    }
 }
 
 window.addEventListener("load",
