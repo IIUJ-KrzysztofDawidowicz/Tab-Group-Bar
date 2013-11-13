@@ -43,6 +43,7 @@ objTabGroupBar.getTabView = function() {
     return browserWindow.TabView;
 };
 
+// Puts the tabs on the main bar
 objTabGroupBar.addGroupTabs = function()
 {
     if(this.tabsLoaded) {this.clearTabGroups();}
@@ -69,6 +70,7 @@ objTabGroupBar.addGroupTabs = function()
         this.addTab("We have content window");
     }
     this.addTab(contentWindow.GroupItems.toString());*/
+	tabView = this.getTabView();
     let contentWindow = tabView.getContentWindow();
 //            if(!contentWindow)
 //                {
@@ -80,8 +82,8 @@ objTabGroupBar.addGroupTabs = function()
 //                    this.addTab("We have content window");
 //                }
 //                this.addTab(contentWindow.GroupItems.toString());
-            var groupItems = contentWindow.GroupItems.groupItems;
-            var activeGroup = contentWindow.GroupItems.getActiveGroupItem();
+            let groupItems = contentWindow.GroupItems.groupItems;
+            let activeGroup = contentWindow.GroupItems.getActiveGroupItem();
             for (i= 0; i<groupItems.length;i++)
             {
                 this.addGroupTab(groupItems[i]);
@@ -103,6 +105,7 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     var tab = document.createElement("tab");
     tab.setAttribute("label", label);
     tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(" + groupItem.id + ");");
+	tab.setAttribute("draggable", "true");
     tabsContainer.appendChild(tab);
 };
 
@@ -122,20 +125,29 @@ objTabGroupBar.switchGroupTo = function(groupId)
 objTabGroupBar.clearTabGroups = function()
 {
     var tabs = [];
-    tabsContainer.childNodes.forEach(function(node){
-        if(node.tagName=="tab")
+    var childNodes = tabsContainer.childNodes;/*.forEach(function(node){
+        if(node.tagName.toLocaleLowerCase()=="tab")
         {
             tabs.push(node);
         }
-    });
+    });*/
+	for(i=0;i<childNodes.length;i++)
+	{
+		if(childNodes[i].tagName.toLocaleLowerCase()=='tab')
+		{
+			tabs.push(childNodes[i]);
+		}
+	}
     tabs.forEach(function(tab){
         tabsContainer.removeChild(tab);
-    })
+    });
+	//this.addTab("cleared");
+
 //    while(tabsContainer.firstChild)
 //    {
 //        tabsContainer.removeChild(tabsContainer.firstChild);
 //    }
-}
+};
 
 window.addEventListener("load",
     function(e)
