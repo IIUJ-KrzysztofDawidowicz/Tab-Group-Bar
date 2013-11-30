@@ -3,20 +3,38 @@
 <overlay id="TabGroupBar-Overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <script type="application/x-javascript"
             src="chrome://TabGroupBar/content/tabgroupbar.js" />
+    <popupset>
+        <menupopup id="TabGroupBar-BarContextMenu">
+            <menuitem id="TabGroupBar-BarContextMenu-NewGroup" label="New Group" tooltiptext="Add new group"
+                      oncommand="objTabGroupBar.createNewGroup()"/>
+            <menuitem id="TabGroupBar-BarContextMenu-Reload" label="Reload tabs"
+                      oncommand="objTabGroupBar.reloadGroupTabs();"/>
+        </menupopup>
+        <menupopup id="TabGroupBar-TabContextMenu">
+            <menuitem id="TabGroupBar-TabContextMenu-CloseGroup" label="Close Group"
+                      oncommand="objTabGroupBar.onCloseGroupContextMenuAction(event)"/>
+            <menuitem id="TabGroupBar-TabContextMenu-RenameGroup" label="Rename Group"
+                      oncommand="objTabGroupBar.renameGroupContextAction(event)"/>
+        </menupopup>
+    </popupset>
+
+
+
     <toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->
         <toolbar id="TabGroupBar-Toolbar"
                  toolbarname="Tab Group Bar"
                  accesskey="G"
                  class="chromeclass-toolbar"
-                 context="toolbar-context-menu"
+                 context="TabGroupBar-BarContextMenu"
                  hidden="false"
                  persist="hidden"
+
                 >
             <tabbox id="TabGroupBar-TabBox" flex="1">
 
                 <arrowscrollbox orient="horizontal">
                     <tabs id="TabGroupBar-TabBox-Tabs">
-                        <button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>
+                        <!--<button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
                         <!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
                         <!--<tab label="Second tab" oncommand=""/>-->
                         <!--<tab label="Last tab"/>-->
