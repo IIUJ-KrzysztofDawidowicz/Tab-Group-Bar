@@ -9,10 +9,13 @@ var objTabGroupBar = {
 objTabGroupBar.init = function(window)
 {
    tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
+   // this.addTab("init called");
    tabView = this.getTabView();
    this.window = window;
    this.addTabContainerEventListeners(window.getBrowser().tabContainer);
+	window.addEventListener("tabviewframeinitialized", function(event) {objTabGroupBar.reloadGroupTabs();});
    tabView._initFrame(this.reloadGroupTabs);
+   // this.addTab("init finished");
 };
 
 objTabGroupBar.addTabContainerEventListeners = function(tabContainer){
@@ -188,7 +191,6 @@ objTabGroupBar.renameGroup = function(group, title){
     group.setTitle(title);
 };
 
-window.addEventListener("tabviewframeinitialized", objTabGroupBar.reloadTabs, false);
 
 window.addEventListener("load",
     function(e)
