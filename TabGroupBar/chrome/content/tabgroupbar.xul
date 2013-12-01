@@ -28,12 +28,15 @@
                  context="TabGroupBar-BarContextMenu"
                  hidden="false"
                  persist="hidden"
-
+				 ondragover="objTabGroupBar.onTabDragOver (event);"
                 >
-            <tabbox id="TabGroupBar-TabBox" flex="1">
+            <tabbox id="TabGroupBar-TabBox" flex="1" ondragover="objTabGroupBar.onTabDragOver(event);">
 
                 <arrowscrollbox orient="horizontal">
-                    <tabs id="TabGroupBar-TabBox-Tabs">
+                    <tabs id="TabGroupBar-TabBox-Tabs"
+						  droppable="true"
+						  ondragover="objTabGroupBar.onTabDragOver(event);"
+						  ondrop="objTabGroupBar.onTabDragOver(event);">
                         <!--<button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
                         <!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
                         <!--<tab label="Second tab" oncommand=""/>-->

@@ -3,7 +3,8 @@ var objTabGroupBar = {
     tabView:null,
     window:null,
     tabsLoaded:false,
-    debug: false
+    debug: false,
+	ignoreNextEvent: false
 };
 
 objTabGroupBar.init = function(window)
@@ -19,7 +20,11 @@ objTabGroupBar.init = function(window)
 };
 
 objTabGroupBar.addTabContainerEventListeners = function(tabContainer){
-	let reloadOnEvent = function(event) {objTabGroupBar.reloadGroupTabs();};
+	let reloadOnEvent = function(event) {
+		if(!objTabGroupBar.ignoreNextEvent)
+			objTabGroupBar.reloadGroupTabs();
+		objTabGroupBar.ignoreNextEvent = false;
+	};
 	tabContainer.addEventListener("TabSelect", reloadOnEvent);
 	// tabContainer.addEventListener("TabSelect")
 };
@@ -29,8 +34,7 @@ objTabGroupBar.reloadGroupTabs = function(){
 };
 
 
-objTabGroupBar.addTab = function(label)
-{
+objTabGroupBar.addTab = function(label){
    var tab = document.createElement("tab");
    tab.setAttribute("label", label);
    tabsContainer.appendChild(tab);
@@ -69,13 +73,47 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     var tab = document.createElement("tab");
     tab.setAttribute("id", "TabGroupBar-GroupTab-" + groupItem.id);
     tab.setAttribute("label", label);
-    tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(" + groupItem.id + ");");
+	tab.setAttribute("groupid", groupItem.id);
 	tab.setAttribute("draggable", "true");
 	tab.setAttribute("droppable", "true");
 	tab.setAttribute("context", "TabGroupBar-TabContextMenu");
-	tab.setAttribute("ondblclick", "objTabGroupBar.onDbClickTab(event);")
-	tab.setAttribute("groupid", groupItem.id);
+	
+	
+    tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(" + groupItem.id + ");");
+	tab.setAttribute("ondblclick", "objTabGroupBar.onDbClickTab(event);");
+	// tab.setAttribute("ondragstart", "objTabGroupBar.onTabDragStrart(event);");
+	tab.setAttribute("ondragend", "objTabGroupBar.addTab('drag end');objTabGroupBar.addTab(event.dataTransfer.dropEffect);");
+	tab.addEventListener("dragstart", function(e) {objTabGroupBar.addTab("dragstart");});
+	tab.addEventListener("dragend", function(e) {objTabGroupBar.addTab("dragend");});
+	tab.addEventListener("dragenter", this.onTabDragOver);
+	tab.addEventListener("dragover", this.onTabDragOver);
+	
+	
     tabsContainer.appendChild(tab);
+};
+
+objTabGroupBar.onTabDragStrart = function(event){
+	let tab = event.target;
+	let dt = event.dataTranfer;
+	dt.effectAllowed = "move";
+	dt.dropeffect = "move";
+	dt.setData("application/x-moz-node", tab);
+	dt.setData("text/plain", tab.getAttribute("groupid"));
+	event.stopPropagation();
+	event.preventDefault();
+};
+
+objTabGroupBar.onTabDragOver = function(event){
+	this.addTab("drop");
+	this.addTab(event.target.nodeName);
+	if(event.dataTransfer.types.contains("application/x-moz-node")){
+		event.preventDefault();
+		event.stopPropagation();
+	}
+};
+
+objTabGroupBar.onTabDrop = function(event){
+	this.addTab("tabdrop");
 };
 
 objTabGroupBar.switchGroupTo = function(groupId){
@@ -83,9 +121,20 @@ objTabGroupBar.switchGroupTo = function(groupId){
     var groupItems = contentWindow.GroupItems;
     var groupToActivate = groupItems.groupItem(groupId);
     let tabItem = groupToActivate.getActiveTab();
-    if (! tabItem) {
+    if (!tabItem) {
         tabItem = groupToActivate.getChild(0);
     }
+	var tab;
+	if(tabItem)
+	{
+		tab = tabItem.tab;
+	}
+	else
+	{
+		tab = this.window.getBrowser().addTab("about:blank");
+		GroupItems.moveTabToGroupItem(tab, groupToActivate.id);
+	}
+	this.ignoreNextEvent = true; //tells the extension to ignore the TabSelected event caused by switching groups
     this.window.gBrowser.selectedTab = tabItem.tab;
 };
 
