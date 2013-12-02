@@ -9,23 +9,24 @@ var objTabGroupBar = {
 
 objTabGroupBar.init = function(window)
 {
-   tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
-   // this.addTab("init called");
-   tabView = this.getTabView();
-   this.window = window;
-   this.addTabContainerEventListeners(window.getBrowser().tabContainer);
-	window.addEventListener("tabviewframeinitialized", function(event) {objTabGroupBar.reloadGroupTabs();});
-   tabView._initFrame(this.reloadGroupTabs);
-   // this.addTab("init finished");
+	tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
+	// this.addTab("init called");
+	tabView = this.getTabView();
+	this.window = window;
+	this.addGlobalEventListeners();	
+	tabView._initFrame(this.addGroupTabs);
 };
 
-objTabGroupBar.addTabContainerEventListeners = function(tabContainer){
+objTabGroupBar.addGlobalEventListeners = function(){
+	let tabContainer = this.window.getBrowser().tabContainer;
 	let reloadOnEvent = function(event) {
 		if(!objTabGroupBar.ignoreNextEvent)
 			objTabGroupBar.reloadGroupTabs();
 		objTabGroupBar.ignoreNextEvent = false;
 	};
 	tabContainer.addEventListener("TabSelect", reloadOnEvent);
+	window.addEventListener("tabviewframeinitialized", reloadOnEvent);
+	window.addEventListener("SSTabRestored", reloadOnEvent);
 	// tabContainer.addEventListener("TabSelect")
 };
 objTabGroupBar.reloadGroupTabs = function(){
@@ -84,7 +85,7 @@ objTabGroupBar.addGroupTab = function(groupItem) {
 	// tab.setAttribute("ondragstart", "objTabGroupBar.onTabDragStrart(event);");
 	tab.setAttribute("ondragend", "objTabGroupBar.addTab('drag end');objTabGroupBar.addTab(event.dataTransfer.dropEffect);");
 	tab.addEventListener("dragstart", function(e) {objTabGroupBar.addTab("dragstart");});
-	tab.addEventListener("dragend", function(e) {objTabGroupBar.addTab("dragend");});
+	tab.addEventListener("dragend",   function(e) {objTabGroupBar.addTab("dragend");});
 	tab.addEventListener("dragenter", this.onTabDragOver);
 	tab.addEventListener("dragover", this.onTabDragOver);
 	
