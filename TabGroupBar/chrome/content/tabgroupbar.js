@@ -41,6 +41,13 @@ objTabGroupBar.addTab = function(label){
    tabsContainer.appendChild(tab);
 }
 
+/**
+ *  @brief Brief
+ *  
+ *  @return Return_Description
+ *  
+ *  @details Details
+ */
 objTabGroupBar.getTabView = function() {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
@@ -66,29 +73,30 @@ objTabGroupBar.addGroupTabs = function(){
 };
 
 objTabGroupBar.addGroupTab = function(groupItem) {
-    var label = groupItem.getTitle();
-    if(!label) {
-        label = "(none)";
+    var title = groupItem.getTitle();
+    if(!title) {
+        title = "(none)";
     }
-    if(this.debug) {label = label + ":" + groupItem.id;}
+    if(this.debug) {title = title + ":" + groupItem.id;}
     var tab = document.createElement("tab");
+    tab.setAttribute("label", title);
+	tab.value = groupItem.id;
     tab.setAttribute("id", "TabGroupBar-GroupTab-" + groupItem.id);
-    tab.setAttribute("label", label);
 	tab.setAttribute("groupid", groupItem.id);
 	tab.setAttribute("draggable", "true");
 	tab.setAttribute("droppable", "true");
 	tab.setAttribute("context", "TabGroupBar-TabContextMenu");
+	tab.setAttribute("flex", 1);
 	
 	
     tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(" + groupItem.id + ");");
 	tab.setAttribute("ondblclick", "objTabGroupBar.onDbClickTab(event);");
 	// tab.setAttribute("ondragstart", "objTabGroupBar.onTabDragStrart(event);");
-	tab.setAttribute("ondragend", "objTabGroupBar.addTab('drag end');objTabGroupBar.addTab(event.dataTransfer.dropEffect);");
+	/* tab.setAttribute("ondragend", "objTabGroupBar.addTab('drag end');objTabGroupBar.addTab(event.dataTransfer.dropEffect);");
 	tab.addEventListener("dragstart", function(e) {objTabGroupBar.addTab("dragstart");});
 	tab.addEventListener("dragend",   function(e) {objTabGroupBar.addTab("dragend");});
 	tab.addEventListener("dragenter", this.onTabDragOver);
-	tab.addEventListener("dragover", this.onTabDragOver);
-	
+	tab.addEventListener("dragover", this.onTabDragOver); */
 	
     tabsContainer.appendChild(tab);
 };
@@ -140,7 +148,11 @@ objTabGroupBar.switchGroupTo = function(groupId){
 };
 
 objTabGroupBar.clearGroupTabs = function(){
-    var tabs = [];
+	while(tabsContainer.firstChild)
+	{
+		tabsContainer.removeChild(tabsContainer.firstChild);
+	}
+    /* var tabs = [];
     var childNodes = tabsContainer.childNodes;
 	for(i=0;i<childNodes.length;i++)
 	{
@@ -151,8 +163,15 @@ objTabGroupBar.clearGroupTabs = function(){
 	}
     tabs.forEach(function(tab){
         tabsContainer.removeChild(tab);
-    });
+    }); */
 
+};
+
+objTabGroupBar.clearChildren = function(node){
+	while(node.firstChild)
+	{
+		node.removeChild(node.firstChild);
+	}
 };
 
 objTabGroupBar.getPopupSourceElement = function(event){
@@ -241,6 +260,28 @@ objTabGroupBar.renameGroup = function(group, title){
     group.setTitle(title);
 };
 
+objTabGroupBar.onTabListPopupShowing = function(event){
+	let popup = event.target;
+	let group = this.getGroupForTab(event.target.parentNode.parentNode.triggerNode);
+	let tabs = group.getChildren();
+	let tabContainer = this.window.gBrowser.tabContainer;
+	
+	let selectTab = function(event) { 
+		objTabGroupBar.window.gBrowser.tabContainer.selectedIndex = event.target.value; 
+	};
+	
+	for(i=0; i<tabs.length;i++)
+	{
+		let tab = tabs[i].tab;
+		let item = document.createElement("menuitem");
+		item.setAttribute("label", tab.label);
+		item.setAttribute("image", tab.image);
+		item.className = "menuitem-iconic";
+		item.value = tabContainer.getIndexOfItem(tab);
+		item.addEventListener("command", selectTab);
+		popup.appendChild(item);
+	}
+};
 
 window.addEventListener("load",
     function(e)
