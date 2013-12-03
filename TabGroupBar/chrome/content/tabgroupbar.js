@@ -281,6 +281,9 @@ objTabGroupBar.onTabListPopupShowing = function(event){
 	
 	let selectTab = function(event) { 
 		objTabGroupBar.window.gBrowser.tabContainer.selectedIndex = event.target.value; 
+		// let groupTab = event.target.parentNode.parentNode.parentNode.triggerNode
+		// objTabGroupBar.tabsContainer.selectedItem = groupTab;
+		objTabGroupBar.reloadGroupTabs();
 	};
 	
 	for(i=0; i<tabs.length;i++)
