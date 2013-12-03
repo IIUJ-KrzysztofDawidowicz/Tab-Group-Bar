@@ -1,3 +1,5 @@
+
+// Global object that acts as a namespace
 var objTabGroupBar = {
     tabsContainer:null,
     tabView:null,
@@ -29,30 +31,42 @@ objTabGroupBar.addGlobalEventListeners = function(){
 	window.addEventListener("SSTabRestored", reloadOnEvent);
 	window.addEventListener("tabviewhidden", reloadOnEvent);
 };
-objTabGroupBar.reloadGroupTabs = function(event){
-    this.clearGroupTabs();
-    this.addGroupTabs();
-};
 
+/////////////////////// Utilities ////////////////////////////
 
+// Adds a simple tab that does nothing. 
+// Originally created for test, currently used during development for debugging.
 objTabGroupBar.addTab = function(label){
    var tab = document.createElement("tab");
    tab.setAttribute("label", label);
    tabsContainer.appendChild(tab);
 }
 
-/**
- *  @brief Brief
- *  
- *  @return Return_Description
- *  
- *  @details Details
- */
 objTabGroupBar.getTabView = function() {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
     var browserWindow = wm.getMostRecentWindow("navigator:browser");
     return browserWindow.TabView;
+};
+
+
+objTabGroupBar.getPopupSourceElement = function(event){
+    return event.target.parentNode.triggerNode;
+};
+
+
+objTabGroupBar.getGroupForTab = function(tab){
+	let groupId = tab.value;//parseInt(tab.getAttribute("groupid"));
+    let group = tabView.getContentWindow().GroupItems.groupItem(groupId);
+	return group;
+};
+
+/////////////////////// Main tab bar /////////////////////////
+
+// Takes a parameter so it can be used as an event handler
+objTabGroupBar.reloadGroupTabs = function(event){
+    this.clearGroupTabs();
+    this.addGroupTabs();
 };
 
 // Puts the tabs on the main bar
@@ -74,8 +88,6 @@ objTabGroupBar.addGroupTabs = function(){
 };
 
 objTabGroupBar.addGroupTab = function(groupItem) {
-
-	
     var title = groupItem.getTitle();
     if(!title) {
         title = "(none)";
@@ -104,6 +116,37 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     tabsContainer.appendChild(tab);
 };
 
+
+objTabGroupBar.clearGroupTabs = function(){
+	while(tabsContainer.firstChild)
+	{
+		tabsContainer.removeChild(tabsContainer.firstChild);
+	}
+    /* var tabs = [];
+    var childNodes = tabsContainer.childNodes;
+	for(i=0;i<childNodes.length;i++)
+	{
+		if(childNodes[i].tagName.toLocaleLowerCase()=='tab')
+		{
+			tabs.push(childNodes[i]);
+		}
+	}
+    tabs.forEach(function(tab){
+        tabsContainer.removeChild(tab);
+    }); */
+
+};
+
+
+objTabGroupBar.clearChildren = function(node){
+	while(node.firstChild)
+	{
+		node.removeChild(node.firstChild);
+	}
+};
+
+
+///////////// Drag and drop handlers /////////////
 objTabGroupBar.onTabDragStrart = function(event){
 	let tab = event.target;
 	let dt = event.dataTranfer;
@@ -128,6 +171,8 @@ objTabGroupBar.onTabDrop = function(event){
 	this.addTab("tabdrop");
 };
 
+//////////////// Actions performed by toolbar elements //////////////////
+
 objTabGroupBar.switchGroupTo = function(groupId){
     let contentWindow = tabView.getContentWindow();
     var groupItems = contentWindow.GroupItems;
@@ -150,36 +195,6 @@ objTabGroupBar.switchGroupTo = function(groupId){
     this.window.gBrowser.selectedTab = tabItem.tab;
 };
 
-objTabGroupBar.clearGroupTabs = function(){
-	while(tabsContainer.firstChild)
-	{
-		tabsContainer.removeChild(tabsContainer.firstChild);
-	}
-    /* var tabs = [];
-    var childNodes = tabsContainer.childNodes;
-	for(i=0;i<childNodes.length;i++)
-	{
-		if(childNodes[i].tagName.toLocaleLowerCase()=='tab')
-		{
-			tabs.push(childNodes[i]);
-		}
-	}
-    tabs.forEach(function(tab){
-        tabsContainer.removeChild(tab);
-    }); */
-
-};
-
-objTabGroupBar.clearChildren = function(node){
-	while(node.firstChild)
-	{
-		node.removeChild(node.firstChild);
-	}
-};
-
-objTabGroupBar.getPopupSourceElement = function(event){
-    return event.target.parentNode.triggerNode;
-};
 
 objTabGroupBar.onCloseGroupContextMenuAction  =  function(event){
     let tab = this.getPopupSourceElement(event);
@@ -250,11 +265,6 @@ objTabGroupBar.onKeyPressedRenameGroupTextBox = function(event){
 	event.stopPropagation();
 };
 
-objTabGroupBar.getGroupForTab = function(tab){
-	let groupId = tab.value;//parseInt(tab.getAttribute("groupid"));
-    let group = tabView.getContentWindow().GroupItems.groupItem(groupId);
-	return group;
-};
 
 objTabGroupBar.renameGroup = function(group, title){
     // let groupId = parseInt(tab.getAttribute("groupid"));
@@ -286,11 +296,8 @@ objTabGroupBar.onTabListPopupShowing = function(event){
 	}
 };
 
-objTabGroupBar.onDragOver = function(event){
-	this.addTab("dragover");
-	event.dataTransfer.types.forEach(function(type) {objTabGroupBar.addTab(type); });
-};
 
+/////////////////// Initialize the extension on window load ///////////////////////////
 window.addEventListener("load",
     function(e)
     {
