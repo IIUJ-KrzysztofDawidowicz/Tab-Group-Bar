@@ -34,8 +34,9 @@
                  context="TabGroupBar-BarContextMenu"
                  hidden="false"
                  persist="hidden"
+				 droppable="true"
                 >
-			<tabbox id="TabGroupBar-TabBox" flex="1" >
+			<tabbox id="TabGroupBar-TabBox" flex="1">
 				<arrowscrollbox orient="horizontal">
 					<tabs id="TabGroupBar-TabBox-Tabs">
 						<!--<button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>-->

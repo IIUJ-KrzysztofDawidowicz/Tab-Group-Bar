@@ -27,9 +27,9 @@ objTabGroupBar.addGlobalEventListeners = function(){
 	tabContainer.addEventListener("TabSelect", reloadOnEvent);
 	window.addEventListener("tabviewframeinitialized", reloadOnEvent);
 	window.addEventListener("SSTabRestored", reloadOnEvent);
-	// tabContainer.addEventListener("TabSelect")
+	window.addEventListener("tabviewhidden", reloadOnEvent);
 };
-objTabGroupBar.reloadGroupTabs = function(){
+objTabGroupBar.reloadGroupTabs = function(event){
     this.clearGroupTabs();
     this.addGroupTabs();
 };
@@ -64,6 +64,7 @@ objTabGroupBar.addGroupTabs = function(){
     for (i= 0; i<groupItems.length;i++)
     {
         this.addGroupTab(groupItems[i]);
+		groupItems[i].addSubscriber("close", this.reloadGroupTabs);
         this.tabsLoaded = true;
         if(groupItems[i]==activeGroup)
         {
@@ -73,6 +74,8 @@ objTabGroupBar.addGroupTabs = function(){
 };
 
 objTabGroupBar.addGroupTab = function(groupItem) {
+
+	
     var title = groupItem.getTitle();
     if(!title) {
         title = "(none)";
@@ -80,13 +83,13 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     if(this.debug) {title = title + ":" + groupItem.id;}
     var tab = document.createElement("tab");
     tab.setAttribute("label", title);
-	tab.value = groupItem.id;
     tab.setAttribute("id", "TabGroupBar-GroupTab-" + groupItem.id);
 	tab.setAttribute("groupid", groupItem.id);
 	tab.setAttribute("draggable", "true");
 	tab.setAttribute("droppable", "true");
 	tab.setAttribute("context", "TabGroupBar-TabContextMenu");
 	tab.setAttribute("flex", 1);
+	tab.value = groupItem.id;
 	
 	
     tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(" + groupItem.id + ");");
@@ -248,7 +251,7 @@ objTabGroupBar.onKeyPressedRenameGroupTextBox = function(event){
 };
 
 objTabGroupBar.getGroupForTab = function(tab){
-	let groupId = parseInt(tab.getAttribute("groupid"));
+	let groupId = tab.value;//parseInt(tab.getAttribute("groupid"));
     let group = tabView.getContentWindow().GroupItems.groupItem(groupId);
 	return group;
 };
@@ -281,6 +284,11 @@ objTabGroupBar.onTabListPopupShowing = function(event){
 		item.addEventListener("command", selectTab);
 		popup.appendChild(item);
 	}
+};
+
+objTabGroupBar.onDragOver = function(event){
+	this.addTab("dragover");
+	event.dataTransfer.types.forEach(function(type) {objTabGroupBar.addTab(type); });
 };
 
 window.addEventListener("load",
