@@ -5,7 +5,7 @@
 
     <Description about="urn:mozilla:install-manifest">
 
-        <!-- Required Items -->
+        
         <em:id>TabGroupBar@krzysztof.dawidowicz.uj.edu.pl</em:id>
         <em:name>Tab Group Bar</em:name>
         <em:type>2</em:type>
@@ -18,11 +18,14 @@
                 <em:maxVersion>30.*</em:maxVersion>
             </Description>
         </em:targetApplication>
+	<em:optionsURL>chrome://tabgroupbar/content/options.xul</em:optionsURL>
+	<em:optionsType>2</em:optionsType>
 
-        <!-- Optional Items -->
+        
         <em:creator>Krzysztof Dawidowicz</em:creator>
         <em:description>Adds a bar with tabs representing tab groups.</em:description>
         <em:homepageURL>https://github.com/IIUJ-KrzysztofDawidowicz/Tab-Group-Bar</em:homepageURL>
+		
 
     </Description>
 </RDF>

@@ -9,8 +9,7 @@ var objTabGroupBar = {
 	ignoreNextEvent: false
 };
 
-objTabGroupBar.init = function(window)
-{
+objTabGroupBar.init = function(window){
 	tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
 	// this.addTab("init called");
 	tabView = this.getTabView();
@@ -210,11 +209,13 @@ objTabGroupBar.closeGroup = function(groupId){
 };
 
 objTabGroupBar.createNewGroup = function(){
-    let GroupItems = tabView.getContentWindow().GroupItems;
-    let newGroup = GroupItems.newGroup();
-    let blankTab = this.window.getBrowser().addTab("about:blank");
-    GroupItems.moveTabToGroupItem(blankTab, newGroup.id);
-    this.addGroupTab(newGroup);
+	tabView._initFrame(function(){
+		let GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
+		let newGroup = GroupItems.newGroup();
+		let blankTab = objTabGroupBar.window.getBrowser().addTab("about:blank");
+		GroupItems.moveTabToGroupItem(blankTab, newGroup.id);
+		objTabGroupBar.addGroupTab(newGroup);
+	});
 };
 
 objTabGroupBar.renameGroupContextAction = function(event){
