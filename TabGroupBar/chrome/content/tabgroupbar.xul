@@ -23,7 +23,10 @@
 		</menupopup>
   
 	</popupset>
-
+  <keyset id="mainKeyset">
+    <key id="tabgroupbar_toggle" modifiers="alt" key="g" oncommand="objTabGroupBar.toggleBar(); event.stopPropagation();"/>
+      
+  </keyset>
   
 
 	<toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->

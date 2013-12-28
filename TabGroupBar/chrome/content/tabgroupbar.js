@@ -79,10 +79,10 @@ objTabGroupBar.addGlobalEventListeners = function(){
 	window.addEventListener("tabviewhidden", reloadOnEvent);
 };
 
+objTabGroupBar.hideToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
+objTabGroupBar.showToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
+
 objTabGroupBar.enableHideToolbarOnMouseAway = function(){
-	
-	this.hideToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
-	this.showToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
 	
 	this.hideToolbar();
 	
@@ -485,6 +485,16 @@ objTabGroupBar.areTabsForDomainInGroup = function(group, domain){
 			return true;
 	}
 	return false;
+};
+
+objTabGroupBar.toggleBar = function(){
+    var isCollapsed = document.getElementById("TabGroupBar-Toolbar").getAttribute("collapsed");
+    if (isCollapsed=="true") {
+        this.showToolbar();
+    }
+    else{
+        this.hideToolbar();
+    }
 };
 
 
