@@ -18,8 +18,8 @@
                 <em:maxVersion>30.*</em:maxVersion>
             </Description>
         </em:targetApplication>
-	<em:optionsURL>chrome://tabgroupbar/content/options.xul</em:optionsURL>
-	<em:optionsType>2</em:optionsType>
+	      <em:optionsURL>chrome://tabgroupbar/content/options.xul</em:optionsURL>
+	      <em:optionsType>2</em:optionsType>
 
         
         <em:creator>Krzysztof Dawidowicz</em:creator>

@@ -15,12 +15,36 @@ objTabGroupBar.init = function(window){
 	// this.addTab("init called");
 	tabView = this.getTabView();
 	this.window = window;
-	let preferences = Components.classes["@mozilla.org/preferences-service;1"]
+
+
+	var preferences = Components.classes["@mozilla.org/preferences-service;1"]
 		.getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
-	hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
+	this.hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
+	preferences.addObserver("", this, false);
+
+
 	this.addGlobalEventListeners();	
 	this.addTabContextMenuItems();
+	if(this.hideWhenMouseIsAway){
+	    this.enableHideToolbarOnMouseAway();
+	}
 	tabView._initFrame(this.addGroupTabs);
+};
+
+objTabGroupBar.observe = function(subject, topic, data){
+    if (topic != "nsPref:changed"){
+        return;
+    }
+    
+    var preferences = Components.classes["@mozilla.org/preferences-service;1"]
+		.getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
+    this.hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
+    if(this.hideWhenMouseIsAway){
+        this.enableHideToolbarOnMouseAway();
+    }
+    else{
+        this.disableHideToolbarOnMouseAway();
+    }
 };
 
 objTabGroupBar.addTabContextMenuItems = function(){
@@ -57,15 +81,24 @@ objTabGroupBar.addGlobalEventListeners = function(){
 
 objTabGroupBar.enableHideToolbarOnMouseAway = function(){
 	
-	let hideToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
-	let showToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
+	this.hideToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
+	this.showToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
 	
-	hideToolbar();
+	this.hideToolbar();
 	
 	let toolbox = document.getElementById("navigator-toolbox");
-	toolbox.addEventListener("mouseleave", hideToolbar);
-	toolbox.addEventListener("mouseover", showToolbar);
-	toolbox.addEventListener("mouseenter", showToolbar);
+	toolbox.addEventListener("mouseleave", this.hideToolbar);
+	toolbox.addEventListener("mouseover", this.showToolbar);
+	toolbox.addEventListener("mouseenter", this.showToolbar);
+};
+
+
+objTabGroupBar.disableHideToolbarOnMouseAway = function(){
+    this.showToolbar();
+    var toolbox = document.getElementById("navigator-toolbox");
+    toolbox.removeEventListener("mouseleave", this.hideToolbar);
+    toolbox.removeEventListener("mouseover", this.showToolbar);
+    toolbox.removeEventListener("mouseenter", this.showToolbar);
 };
 
 /////////////////////// Utilities ////////////////////////////
@@ -110,6 +143,7 @@ objTabGroupBar.getUrlForTab = function(tab){
 objTabGroupBar.addDebugTabs = function(){
 	return;
 	
+    this.addTab(this.hideWhenMouseIsAway);
 	//This adds all domains found in all groups
 	this.tabView = this.getTabView();
     let contentWindow = tabView.getContentWindow();
