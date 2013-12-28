@@ -6,7 +6,8 @@ var objTabGroupBar = {
     window:null,
     tabsLoaded:false,
     debug: false,
-	ignoreNextEvent: false
+	ignoreNextEvent: false,
+	hideWhenMouseIsAway: false,
 };
 
 objTabGroupBar.init = function(window){
@@ -14,8 +15,31 @@ objTabGroupBar.init = function(window){
 	// this.addTab("init called");
 	tabView = this.getTabView();
 	this.window = window;
+	let preferences = Components.classes["@mozilla.org/preferences-service;1"]
+		.getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
+	hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
 	this.addGlobalEventListeners();	
+	this.addTabContextMenuItems();
 	tabView._initFrame(this.addGroupTabs);
+};
+
+objTabGroupBar.addTabContextMenuItems = function(){
+    var tabContextMenu = document.getElementById("tabContextMenu");
+
+
+    var menu = document.createElement("menu");
+    menu.setAttribute("label", "Move tab to group");
+    var popup = document.createElement("menupopup");
+    popup.setAttribute("onpopupshowing", "objTabGroupBar.populateMoveToGroupPopup(event);");
+    menu.appendChild(popup);
+    tabContextMenu.appendChild(menu);
+
+    menu = document.createElement("menu");
+    menu.setAttribute("label", "Move all tabs for this domain to group");
+    popup = document.createElement("menupopup");
+    popup.setAttribute("onpopupshowing", "objTabGroupBar.populateMoveAllThisDomainToGroupPopup(event);");
+    menu.appendChild(popup);
+    tabContextMenu.appendChild(menu);
 };
 
 objTabGroupBar.addGlobalEventListeners = function(){
@@ -29,6 +53,19 @@ objTabGroupBar.addGlobalEventListeners = function(){
 	window.addEventListener("tabviewframeinitialized", reloadOnEvent);
 	window.addEventListener("SSTabRestored", reloadOnEvent);
 	window.addEventListener("tabviewhidden", reloadOnEvent);
+};
+
+objTabGroupBar.enableHideToolbarOnMouseAway = function(){
+	
+	let hideToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
+	let showToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
+	
+	hideToolbar();
+	
+	let toolbox = document.getElementById("navigator-toolbox");
+	toolbox.addEventListener("mouseleave", hideToolbar);
+	toolbox.addEventListener("mouseover", showToolbar);
+	toolbox.addEventListener("mouseenter", showToolbar);
 };
 
 /////////////////////// Utilities ////////////////////////////
@@ -60,12 +97,43 @@ objTabGroupBar.getGroupForTab = function(tab){
 	return group;
 };
 
+objTabGroupBar.getDomainFromURL = function(url){
+    var domainFindingRegex = /:\/\/(.[^/]+)/;
+    var matches = url.match(domainFindingRegex);
+	return matches[1];
+}
+
+objTabGroupBar.getUrlForTab = function(tab){
+	return this.window.gBrowser.getBrowserForTab(tab).currentURI.spec;
+};
+
+objTabGroupBar.addDebugTabs = function(){
+	return;
+	
+	//This adds all domains found in all groups
+	this.tabView = this.getTabView();
+    let contentWindow = tabView.getContentWindow();
+    let groupItems = contentWindow.GroupItems.groupItems;
+    for (i= 0; i<groupItems.length;i++){
+		let tabs = groupItems[i].getChildren();
+		this.addTab("Group: " + groupItems[i].getTitle() + ", " + tabs.length + " tabs");
+		for(j=0; j<tabs.length;j++){
+			let url = this.getUrlForTab(tabs[j].tab);
+		    // this.addTab(url);
+			this.addTab(this.getDomainFromURL(url));
+		}
+		
+	}
+	
+}
+
 /////////////////////// Main tab bar /////////////////////////
 
 // Takes a parameter so it can be used as an event handler
 objTabGroupBar.reloadGroupTabs = function(event){
     this.clearGroupTabs();
     this.addGroupTabs();
+	this.addDebugTabs();
 };
 
 // Puts the tabs on the main bar
@@ -79,8 +147,7 @@ objTabGroupBar.addGroupTabs = function(){
         this.addGroupTab(groupItems[i]);
 		groupItems[i].addSubscriber("close", this.reloadGroupTabs);
         this.tabsLoaded = true;
-        if(groupItems[i]==activeGroup)
-        {
+        if(groupItems[i]==activeGroup){
               tabsContainer.selectedItem=tabsContainer.lastChild;
         }
     }
@@ -210,9 +277,9 @@ objTabGroupBar.closeGroup = function(groupId){
 
 objTabGroupBar.createNewGroup = function(){
 	tabView._initFrame(function(){
-		let GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
-		let newGroup = GroupItems.newGroup();
-		let blankTab = objTabGroupBar.window.getBrowser().addTab("about:blank");
+		var GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
+		var newGroup =  GroupItems.newGroup();
+		var blankTab = objTabGroupBar.window.getBrowser().addTab("about:blank");
 		GroupItems.moveTabToGroupItem(blankTab, newGroup.id);
 		objTabGroupBar.addGroupTab(newGroup);
 	});
@@ -298,6 +365,92 @@ objTabGroupBar.onTabListPopupShowing = function(event){
 		item.addEventListener("command", selectTab);
 		popup.appendChild(item);
 	}
+};
+
+
+
+objTabGroupBar.populateMoveToGroupPopup = function(event){
+    var moveToGroupAction = function(event){
+        var groupId = event.target.value;
+        //starting with event.target: menu item - MoveToPopup - enclosing menu - tab context menu - clicked tab
+        var tab = event.target.parentNode.parentNode.parentNode.triggerNode;
+        objTabGroupBar.tabView.getContentWindow().GroupItems.moveTabToGroupItem(tab, groupId);
+    };
+
+    this._populateMoveToGroupPopup(event, moveToGroupAction);
+    
+};
+
+objTabGroupBar.populateMoveAllThisDomainToGroupPopup = function(event){
+    var action = function(event){
+        var groupId = event.target.value;
+        //starting with event.target: menu item - MoveToPopup - enclosing menu - tab context menu - clicked tab
+        var tab = event.target.parentNode.parentNode.parentNode.triggerNode;
+        var domain = objTabGroupBar.getDomainFromURL(objTabGroupBar.getUrlForTab(tab));
+        objTabGroupBar.addTab(domain);
+        var GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
+        var tabs = GroupItems.getActiveGroupItem().getChildren();
+        var tabsToMove = [];
+        for(let i=0;i<tabs.length;i++){
+            if(objTabGroupBar.getDomainFromURL(objTabGroupBar.getUrlForTab(tabs[i].tab))==domain)
+                tabsToMove.push(tabs[i].tab);
+        }
+        for(let i=0;i<tabsToMove.length;i++){
+            GroupItems.moveTabToGroupItem(tabsToMove[i], groupId);
+        }
+    };
+
+    this._populateMoveToGroupPopup(event, action);
+};
+
+objTabGroupBar._populateMoveToGroupPopup = function(event, onCommandAction){
+    // Extract the domain of the open page of the tab
+    //starting with event.target: MoveToPopup - enclosing menu - tab context menu - clicked tab
+    var popup = event.target;
+    this.clearChildren(popup);
+    //var testNode = document.createElement("menuitem");
+    //testNode.setAttribute("label", "test");
+    //popup.appendChild(testNode);
+    var tab = event.target.parentNode.parentNode.triggerNode;
+    var domain = this.getDomainFromURL(this.getUrlForTab(tab));
+    var groupItems = this.tabView.getContentWindow().GroupItems.groupItems;
+    var activeGroupItem = this.tabView.getContentWindow().GroupItems.getActiveGroupItem();
+    var separator = document.createElement("menuseparator");
+    popup.appendChild(separator);
+    for(i=0;i<groupItems.length;i++){
+        //testNode.setAttribute("label", 1);
+        let groupItem = groupItems[i];
+        if(groupItem!=activeGroupItem) { //skip the tab group we're in
+            //testNode.setAttribute("label", 2);
+            let moveToGroupItem = document.createElement("menuitem");
+            moveToGroupItem.setAttribute("label", groupItem.getTitle());
+            moveToGroupItem.setAttribute("value", groupItem.id);
+            //testNode.setAttribute("label", 3);
+            moveToGroupItem.addEventListener("command", onCommandAction);
+            //testNode.setAttribute("label", 4);
+            let isCandidateForDomainGroup = this.areTabsForDomainInGroup(groupItem, domain);
+            //testNode.setAttribute("label", 5);
+
+            if(isCandidateForDomainGroup){
+                popup.insertBefore(moveToGroupItem, separator);
+            }
+            else{
+                popup.appendChild(moveToGroupItem);
+            }
+        }
+    }
+};
+
+//If any of the tabs in the tab group are open to pages in the given domain, return true.
+objTabGroupBar.areTabsForDomainInGroup = function(group, domain){
+    let tabs = group.getChildren();
+    for(let i = 0;i<tabs.length;i++){
+        let tabUrl = this.getUrlForTab(tabs[i].tab);
+        let tabDomain = this.getDomainFromURL(tabUrl);
+		if(tabDomain==domain)
+			return true;
+	}
+	return false;
 };
 
 

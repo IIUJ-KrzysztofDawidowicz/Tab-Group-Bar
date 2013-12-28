@@ -21,10 +21,10 @@
 					  onpopuphiding="objTabGroupBar.clearChildren(event.target)"/>
 			</menu>
 		</menupopup>
-		
+  
 	</popupset>
 
-
+  
 
 	<toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->
 		<toolbar id="TabGroupBar-Toolbar"
