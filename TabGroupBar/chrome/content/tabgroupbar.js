@@ -6,39 +6,53 @@ var objTabGroupBar = {
     window:null,
     tabsLoaded:false,
     debug: false,
-	ignoreNextEvent: false,
-	hideWhenMouseIsAway: false,
+    ignoreNextEvent: false,
+    hideWhenMouseIsAway: false,
+    debugTabs: []
 };
 
 objTabGroupBar.init = function(window){
-	tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
-	// this.addTab("init called");
-	tabView = this.getTabView();
-	this.window = window;
+    tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
+    // this.addTab("init called");
+    tabView = this.getTabView();
+    this.window = window;
 
 
-	var preferences = Components.classes["@mozilla.org/preferences-service;1"]
-		.getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
-	this.hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
-	preferences.addObserver("", this, false);
+    var preferences = Components.classes["@mozilla.org/preferences-service;1"]
+        .getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
+    this.hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
+    preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
+    preferences.addObserver("", this, false);
+    preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
 
 
-	this.addGlobalEventListeners();	
-	this.addTabContextMenuItems();
-	if(this.hideWhenMouseIsAway){
-	    this.enableHideToolbarOnMouseAway();
-	}
-	tabView._initFrame(this.addGroupTabs);
+    this.addGlobalEventListeners();	
+    this.addTabContextMenuItems();
+    if(this.hideWhenMouseIsAway){
+        this.enableHideToolbarOnMouseAway();
+    }
+    tabView._initFrame(this.addGroupTabs);
 };
 
 objTabGroupBar.observe = function(subject, topic, data){
-    if (topic != "nsPref:changed"){
-        return;
-    }
+    //if (topic != "nsPref:changed"){
+    //    return;
+    //}
     
+    this.refreshInfo();
+    
+    preferences.addObserver("", this, false);
+    preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
+};
+
+objTabGroupBar.refreshInfo = function(){
     var preferences = Components.classes["@mozilla.org/preferences-service;1"]
-		.getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
+        .getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
+    preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
+    var previousValue = this.hideWhenMouseIsAway;
     this.hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
+    if(previousValue==this.hideWhenMouseIsAway) return;
+
     if(this.hideWhenMouseIsAway){
         this.enableHideToolbarOnMouseAway();
     }
@@ -67,29 +81,29 @@ objTabGroupBar.addTabContextMenuItems = function(){
 };
 
 objTabGroupBar.addGlobalEventListeners = function(){
-	let tabContainer = this.window.getBrowser().tabContainer;
-	let reloadOnEvent = function(event) {
-		if(!objTabGroupBar.ignoreNextEvent)
-			objTabGroupBar.reloadGroupTabs();
-		objTabGroupBar.ignoreNextEvent = false;
-	};
-	tabContainer.addEventListener("TabSelect", reloadOnEvent);
-	window.addEventListener("tabviewframeinitialized", reloadOnEvent);
-	window.addEventListener("SSTabRestored", reloadOnEvent);
-	window.addEventListener("tabviewhidden", reloadOnEvent);
+    let tabContainer = this.window.getBrowser().tabContainer;
+    let reloadOnEvent = function(event) {
+        if(!objTabGroupBar.ignoreNextEvent)
+            objTabGroupBar.reloadGroupTabs();
+        objTabGroupBar.ignoreNextEvent = false;
+    };
+    tabContainer.addEventListener("TabSelect", reloadOnEvent);
+    window.addEventListener("tabviewframeinitialized", reloadOnEvent);
+    window.addEventListener("SSTabRestored", reloadOnEvent);
+    window.addEventListener("tabviewhidden", reloadOnEvent);
 };
 
 objTabGroupBar.hideToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
 objTabGroupBar.showToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
 
 objTabGroupBar.enableHideToolbarOnMouseAway = function(){
-	
-	this.hideToolbar();
-	
-	let toolbox = document.getElementById("navigator-toolbox");
-	toolbox.addEventListener("mouseleave", this.hideToolbar);
-	toolbox.addEventListener("mouseover", this.showToolbar);
-	toolbox.addEventListener("mouseenter", this.showToolbar);
+    
+    this.hideToolbar();
+    
+    let toolbox = document.getElementById("navigator-toolbox");
+    toolbox.addEventListener("mouseleave", this.hideToolbar);
+    toolbox.addEventListener("mouseover", this.showToolbar);
+    toolbox.addEventListener("mouseenter", this.showToolbar);
 };
 
 
@@ -125,40 +139,43 @@ objTabGroupBar.getPopupSourceElement = function(event){
 
 
 objTabGroupBar.getGroupForTab = function(tab){
-	let groupId = tab.value;//parseInt(tab.getAttribute("groupid"));
+    let groupId = tab.value;//parseInt(tab.getAttribute("groupid"));
     let group = tabView.getContentWindow().GroupItems.groupItem(groupId);
-	return group;
+    return group;
 };
 
 objTabGroupBar.getDomainFromURL = function(url){
     var domainFindingRegex = /:\/\/(.[^/]+)/;
     var matches = url.match(domainFindingRegex);
-	return matches[1];
+    return matches[1];
 }
 
 objTabGroupBar.getUrlForTab = function(tab){
-	return this.window.gBrowser.getBrowserForTab(tab).currentURI.spec;
+    return this.window.gBrowser.getBrowserForTab(tab).currentURI.spec;
 };
 
 objTabGroupBar.addDebugTabs = function(){
-	return;
-	
+    for(var ii = 0;i<this.debugTabs.length;i++){
+        this.addTab(this.debugTabs[i]);
+    }
+    return;
+    
     this.addTab(this.hideWhenMouseIsAway);
-	//This adds all domains found in all groups
-	this.tabView = this.getTabView();
-    let contentWindow = tabView.getContentWindow();
-    let groupItems = contentWindow.GroupItems.groupItems;
+    //This adds all domains found in all groups
+    this.tabView = this.getTabView();
+    var contentWindow = tabView.getContentWindow();
+    var groupItems = contentWindow.GroupItems.groupItems;
     for (i= 0; i<groupItems.length;i++){
-		let tabs = groupItems[i].getChildren();
-		this.addTab("Group: " + groupItems[i].getTitle() + ", " + tabs.length + " tabs");
-		for(j=0; j<tabs.length;j++){
-			let url = this.getUrlForTab(tabs[j].tab);
-		    // this.addTab(url);
-			this.addTab(this.getDomainFromURL(url));
-		}
-		
-	}
-	
+        let tabs = groupItems[i].getChildren();
+        this.addTab("Group: " + groupItems[i].getTitle() + ", " + tabs.length + " tabs");
+        for(j=0; j<tabs.length;j++){
+            let url = this.getUrlForTab(tabs[j].tab);
+            // this.addTab(url);
+            this.addTab(this.getDomainFromURL(url));
+        }
+        
+    }
+    
 }
 
 /////////////////////// Main tab bar /////////////////////////
@@ -167,19 +184,19 @@ objTabGroupBar.addDebugTabs = function(){
 objTabGroupBar.reloadGroupTabs = function(event){
     this.clearGroupTabs();
     this.addGroupTabs();
-	this.addDebugTabs();
+    this.addDebugTabs();
 };
 
 // Puts the tabs on the main bar
 objTabGroupBar.addGroupTabs = function(){
-	this.tabView = this.getTabView();
+    this.tabView = this.getTabView();
     let contentWindow = tabView.getContentWindow();
     let groupItems = contentWindow.GroupItems.groupItems;
     let activeGroup = contentWindow.GroupItems.getActiveGroupItem();
     for (i= 0; i<groupItems.length;i++)
     {
         this.addGroupTab(groupItems[i]);
-		groupItems[i].addSubscriber("close", this.reloadGroupTabs);
+        groupItems[i].addSubscriber("close", this.reloadGroupTabs);
         this.tabsLoaded = true;
         if(groupItems[i]==activeGroup){
               tabsContainer.selectedItem=tabsContainer.lastChild;
@@ -196,41 +213,38 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     var tab = document.createElement("tab");
     tab.setAttribute("label", title);
     tab.setAttribute("id", "TabGroupBar-GroupTab-" + groupItem.id);
-	tab.setAttribute("groupid", groupItem.id);
-	tab.setAttribute("draggable", "true");
-	tab.setAttribute("droppable", "true");
-	tab.setAttribute("context", "TabGroupBar-TabContextMenu");
-	tab.setAttribute("flex", 1);
-	tab.value = groupItem.id;
-	
-	
+    tab.setAttribute("groupid", groupItem.id);
+    tab.setAttribute("context", "TabGroupBar-TabContextMenu");
+    tab.value = groupItem.id;
+    
+    
     tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(" + groupItem.id + ");");
-	tab.setAttribute("ondblclick", "objTabGroupBar.onDbClickTab(event);");
-	// tab.setAttribute("ondragstart", "objTabGroupBar.onTabDragStrart(event);");
-	/* tab.setAttribute("ondragend", "objTabGroupBar.addTab('drag end');objTabGroupBar.addTab(event.dataTransfer.dropEffect);");
-	tab.addEventListener("dragstart", function(e) {objTabGroupBar.addTab("dragstart");});
-	tab.addEventListener("dragend",   function(e) {objTabGroupBar.addTab("dragend");});
-	tab.addEventListener("dragenter", this.onTabDragOver);
-	tab.addEventListener("dragover", this.onTabDragOver); */
-	
+    tab.setAttribute("ondblclick", "objTabGroupBar.onDbClickTab(event);");
+    // tab.setAttribute("ondragstart", "objTabGroupBar.onTabDragStrart(event);");
+    /* tab.setAttribute("ondragend", "objTabGroupBar.addTab('drag end');objTabGroupBar.addTab(event.dataTransfer.dropEffect);");
+    tab.addEventListener("dragstart", function(e) {objTabGroupBar.addTab("dragstart");});
+    tab.addEventListener("dragend",   function(e) {objTabGroupBar.addTab("dragend");});
+    tab.addEventListener("dragenter", this.onTabDragOver);
+    tab.addEventListener("dragover", this.onTabDragOver); */
+    
     tabsContainer.appendChild(tab);
 };
 
 
 objTabGroupBar.clearGroupTabs = function(){
-	while(tabsContainer.firstChild)
-	{
-		tabsContainer.removeChild(tabsContainer.firstChild);
-	}
+    while(tabsContainer.firstChild)
+    {
+        tabsContainer.removeChild(tabsContainer.firstChild);
+    }
     /* var tabs = [];
     var childNodes = tabsContainer.childNodes;
-	for(i=0;i<childNodes.length;i++)
-	{
-		if(childNodes[i].tagName.toLocaleLowerCase()=='tab')
-		{
-			tabs.push(childNodes[i]);
-		}
-	}
+    for(i=0;i<childNodes.length;i++)
+    {
+        if(childNodes[i].tagName.toLocaleLowerCase()=='tab')
+        {
+            tabs.push(childNodes[i]);
+        }
+    }
     tabs.forEach(function(tab){
         tabsContainer.removeChild(tab);
     }); */
@@ -239,41 +253,42 @@ objTabGroupBar.clearGroupTabs = function(){
 
 
 objTabGroupBar.clearChildren = function(node){
-	while(node.firstChild)
-	{
-		node.removeChild(node.firstChild);
-	}
+    while(node.firstChild)
+    {
+        node.removeChild(node.firstChild);
+    }
 };
 
 
 ///////////// Drag and drop handlers /////////////
 objTabGroupBar.onTabDragStrart = function(event){
-	let tab = event.target;
-	let dt = event.dataTranfer;
-	dt.effectAllowed = "move";
-	dt.dropeffect = "move";
-	dt.setData("application/x-moz-node", tab);
-	dt.setData("text/plain", tab.getAttribute("groupid"));
-	event.stopPropagation();
-	event.preventDefault();
+    let tab = event.target;
+    let dt = event.dataTranfer;
+    dt.effectAllowed = "move";
+    dt.dropeffect = "move";
+    dt.setData("application/x-moz-node", tab);
+    dt.setData("text/plain", tab.getAttribute("groupid"));
+    event.stopPropagation();
+    event.preventDefault();
 };
 
 objTabGroupBar.onTabDragOver = function(event){
-	this.addTab("drop");
-	this.addTab(event.target.nodeName);
-	if(event.dataTransfer.types.contains("application/x-moz-node")){
-		event.preventDefault();
-		event.stopPropagation();
-	}
+    this.addTab("drop");
+    this.addTab(event.target.nodeName);
+    if(event.dataTransfer.types.contains("application/x-moz-node")){
+        event.preventDefault();
+        event.stopPropagation();
+    }
 };
 
 objTabGroupBar.onTabDrop = function(event){
-	this.addTab("tabdrop");
+    this.addTab("tabdrop");
 };
 
 //////////////// Actions performed by toolbar elements //////////////////
-
 objTabGroupBar.switchGroupTo = function(groupId){
+    return false;
+
     let contentWindow = tabView.getContentWindow();
     var groupItems = contentWindow.GroupItems;
     var groupToActivate = groupItems.groupItem(groupId);
@@ -281,17 +296,17 @@ objTabGroupBar.switchGroupTo = function(groupId){
     if (!tabItem) {
         tabItem = groupToActivate.getChild(0);
     }
-	var tab;
-	if(tabItem)
-	{
-		tab = tabItem.tab;
-	}
-	else
-	{
-		tab = this.window.getBrowser().addTab("about:blank");
-		GroupItems.moveTabToGroupItem(tab, groupToActivate.id);
-	}
-	this.ignoreNextEvent = true; //tells the extension to ignore the TabSelected event caused by switching groups
+    var tab;
+    if(tabItem)
+    {
+        tab = tabItem.tab;
+    }
+    else
+    {
+        tab = this.window.getBrowser().addTab("about:blank");
+        GroupItems.moveTabToGroupItem(tab, groupToActivate.id);
+    }
+    this.ignoreNextEvent = true; //tells the extension to ignore the TabSelected event caused by switching groups
     this.window.gBrowser.selectedTab = tabItem.tab;
 };
 
@@ -310,13 +325,13 @@ objTabGroupBar.closeGroup = function(groupId){
 };
 
 objTabGroupBar.createNewGroup = function(){
-	tabView._initFrame(function(){
-		var GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
-		var newGroup =  GroupItems.newGroup();
-		var blankTab = objTabGroupBar.window.getBrowser().addTab("about:blank");
-		GroupItems.moveTabToGroupItem(blankTab, newGroup.id);
-		objTabGroupBar.addGroupTab(newGroup);
-	});
+    tabView._initFrame(function(){
+        var GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
+        var newGroup =  GroupItems.newGroup();
+        var blankTab = objTabGroupBar.window.getBrowser().addTab("about:blank");
+        GroupItems.moveTabToGroupItem(blankTab, newGroup.id);
+        objTabGroupBar.addGroupTab(newGroup);
+    });
 };
 
 objTabGroupBar.renameGroupContextAction = function(event){
@@ -331,13 +346,13 @@ objTabGroupBar.createRenameGroupTextBox = function(tab){
     let groupTitle = tab.getAttribute("label");
     tab.setAttribute("groupTitle", groupTitle);
     tab.setAttribute("label", "");
-	tab.disabled = true;
+    tab.disabled = true;
     let textBox = document.createElement("textbox");
     textBox.setAttribute("value", groupTitle);
     textBox.setAttribute("onkeypress", "objTabGroupBar.onKeyPressedRenameGroupTextBox(event);");
     textBox.setAttribute("onblur", "objTabGroupBar.onBlurRenameGroupTextBox(event);");
-	textBox.setAttribute("onclick", "event.target.inputField.onclick();");
-	textBox.clickSelectsAll = true;
+    textBox.setAttribute("onclick", "event.target.inputField.onclick();");
+    textBox.clickSelectsAll = true;
     tab.appendChild(textBox);
     textBox.parent = tab;
     textBox.focus();
@@ -350,7 +365,7 @@ objTabGroupBar.onBlurRenameGroupTextBox = function(event){
     {
         tab.setAttribute("label", tab.getAttribute("groupTitle"));
     }
-	tab.disabled = false;
+    tab.disabled = false;
 };
 
 objTabGroupBar.onKeyPressedRenameGroupTextBox = function(event){
@@ -361,10 +376,10 @@ objTabGroupBar.onKeyPressedRenameGroupTextBox = function(event){
         tab.setAttribute("label", title);
         tab.setAttribute("groupTitle", title);
         tab.removeChild(event.target);
-		tab.disabled = false;
+        tab.disabled = false;
         this.renameGroup(this.getGroupForTab(tab), title);
     }
-	event.stopPropagation();
+    event.stopPropagation();
 };
 
 
@@ -376,29 +391,29 @@ objTabGroupBar.renameGroup = function(group, title){
 };
 
 objTabGroupBar.onTabListPopupShowing = function(event){
-	let popup = event.target;
-	let group = this.getGroupForTab(event.target.parentNode.parentNode.triggerNode);
-	let tabs = group.getChildren();
-	let tabContainer = this.window.gBrowser.tabContainer;
-	
-	let selectTab = function(event) { 
-		objTabGroupBar.window.gBrowser.tabContainer.selectedIndex = event.target.value; 
-		// let groupTab = event.target.parentNode.parentNode.parentNode.triggerNode
-		// objTabGroupBar.tabsContainer.selectedItem = groupTab;
-		objTabGroupBar.reloadGroupTabs();
-	};
-	
-	for(i=0; i<tabs.length;i++)
-	{
-		let tab = tabs[i].tab;
-		let item = document.createElement("menuitem");
-		item.setAttribute("label", tab.label);
-		item.setAttribute("image", tab.image);
-		item.className = "menuitem-iconic";
-		item.value = tabContainer.getIndexOfItem(tab);
-		item.addEventListener("command", selectTab);
-		popup.appendChild(item);
-	}
+    let popup = event.target;
+    let group = this.getGroupForTab(event.target.parentNode.parentNode.triggerNode);
+    let tabs = group.getChildren();
+    let tabContainer = this.window.gBrowser.tabContainer;
+    
+    let selectTab = function(event) { 
+        objTabGroupBar.window.gBrowser.tabContainer.selectedIndex = event.target.value; 
+        // let groupTab = event.target.parentNode.parentNode.parentNode.triggerNode
+        // objTabGroupBar.tabsContainer.selectedItem = groupTab;
+        objTabGroupBar.reloadGroupTabs();
+    };
+    
+    for(i=0; i<tabs.length;i++)
+    {
+        let tab = tabs[i].tab;
+        let item = document.createElement("menuitem");
+        item.setAttribute("label", tab.label);
+        item.setAttribute("image", tab.image);
+        item.className = "menuitem-iconic";
+        item.value = tabContainer.getIndexOfItem(tab);
+        item.addEventListener("command", selectTab);
+        popup.appendChild(item);
+    }
 };
 
 
@@ -481,10 +496,10 @@ objTabGroupBar.areTabsForDomainInGroup = function(group, domain){
     for(let i = 0;i<tabs.length;i++){
         let tabUrl = this.getUrlForTab(tabs[i].tab);
         let tabDomain = this.getDomainFromURL(tabUrl);
-		if(tabDomain==domain)
-			return true;
-	}
-	return false;
+        if(tabDomain==domain)
+            return true;
+    }
+    return false;
 };
 
 objTabGroupBar.toggleBar = function(){

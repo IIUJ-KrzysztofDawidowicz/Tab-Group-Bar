@@ -1,55 +1,54 @@
 <?xml version="1.0"?>
 
 <overlay id="TabGroupBar-Overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<script type="application/x-javascript"
+  <script type="application/x-javascript"
             src="chrome://TabGroupBar/content/tabgroupbar.js" />
-	<popupset>
-		<menupopup id="TabGroupBar-BarContextMenu">
-			<menuitem id="TabGroupBar-BarContextMenu-NewGroup" label="New Group" tooltiptext="Add new group"
+  <popupset>
+    <menupopup id="TabGroupBar-BarContextMenu">
+      <menuitem id="TabGroupBar-BarContextMenu-NewGroup" label="New Group" tooltiptext="Add new group"
                       oncommand="objTabGroupBar.createNewGroup()"/>
-			<menuitem id="TabGroupBar-BarContextMenu-Reload" label="Reload tabs"
+      <menuitem id="TabGroupBar-BarContextMenu-Reload" label="Reload tabs"
                       oncommand="objTabGroupBar.reloadGroupTabs();"/>
-		</menupopup>
-		<menupopup id="TabGroupBar-TabContextMenu">
-			<menuitem id="TabGroupBar-TabContextMenu-CloseGroup" 	label="Close Group"
+    </menupopup>
+    <menupopup id="TabGroupBar-TabContextMenu">
+      <menuitem id="TabGroupBar-TabContextMenu-CloseGroup" 	label="Close Group"
                       oncommand="objTabGroupBar.onCloseGroupContextMenuAction(event)"/>
-			<menuitem id="TabGroupBar-TabContextMenu-RenameGroup" 	label="Rename Group"
+      <menuitem id="TabGroupBar-TabContextMenu-RenameGroup" 	label="Rename Group"
                       oncommand="objTabGroupBar.renameGroupContextAction(event)"/>
-			<menu 	  id="TabGroupBar-TabContextMenu-TabMenu"		label="Tabs">
-					  <menupopup   id="TabGroupBar-TabContextMenu-TabMenu-Popup" 
-					  onpopupshowing="objTabGroupBar.onTabListPopupShowing(event);" 
-					  onpopuphiding="objTabGroupBar.clearChildren(event.target)"/>
-			</menu>
-		</menupopup>
+      <menu 	  id="TabGroupBar-TabContextMenu-TabMenu"		label="Tabs">
+            <menupopup   id="TabGroupBar-TabContextMenu-TabMenu-Popup" 
+            onpopupshowing="objTabGroupBar.onTabListPopupShowing(event);" 
+            onpopuphiding="objTabGroupBar.clearChildren(event.target)"/>
+      </menu>
+    </menupopup>
   
-	</popupset>
+  </popupset>
   <keyset id="mainKeyset">
     <key id="tabgroupbar_toggle" modifiers="alt" key="g" oncommand="objTabGroupBar.toggleBar(); event.stopPropagation();"/>
       
   </keyset>
   
 
-	<toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->
-		<toolbar id="TabGroupBar-Toolbar"
+  <toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->
+    <toolbar id="TabGroupBar-Toolbar"
                  toolbarname="Tab Group Bar"
                  accesskey="G"
                  class="chromeclass-toolbar"
                  context="TabGroupBar-BarContextMenu"
                  hidden="false"
                  persist="hidden"
-				 droppable="true"
                 >
-			<tabbox id="TabGroupBar-TabBox" flex="1">
-				<arrowscrollbox orient="horizontal">
-					<tabs id="TabGroupBar-TabBox-Tabs">
-						<!--<button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
-						<!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
-						<!--<tab label="Second tab" oncommand=""/>-->
-						<!--<tab label="Last tab"/>-->
-					</tabs>
-				</arrowscrollbox>
+      <tabbox id="TabGroupBar-TabBox">
+        <arrowscrollbox orient="horizontal">
+          <tabs id="TabGroupBar-TabBox-Tabs">
+            <!--<button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
+            <!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
+            <!--<tab label="Second tab" oncommand=""/>-->
+            <!--<tab label="Last tab"/>-->
+          </tabs>
+        </arrowscrollbox>
 
-			</tabbox>
-		</toolbar>
-	</toolbox>
+      </tabbox>
+    </toolbar>
+  </toolbox>
 </overlay>

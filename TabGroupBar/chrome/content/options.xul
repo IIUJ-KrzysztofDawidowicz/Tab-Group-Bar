@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<setting type="bool" pref="extensions.tabgroupbar.hideOnMouseLeave" title="Only show the bar when the mouse is over the toolbars area"/>
+	<setting type="bool" pref="extensions.tabgroupbar.hideOnMouseLeave" title="Only show the bar when the mouse is over the toolbars area" onclick="objTabGroupBar.refreshInfo();"/>
 </vbox>
