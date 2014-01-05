@@ -207,25 +207,18 @@ objTabGroupBar.addGroupTabs = function(){
 objTabGroupBar.addGroupTab = function(groupItem) {
     var title = groupItem.getTitle();
     if(!title) {
-        title = "(none)";
+        title = "Group " + groupItem.id;
     }
     if(this.debug) {title = title + ":" + groupItem.id;}
     var tab = document.createElement("tab");
     tab.setAttribute("label", title);
     tab.setAttribute("id", "TabGroupBar-GroupTab-" + groupItem.id);
-    tab.setAttribute("groupid", groupItem.id);
     tab.setAttribute("context", "TabGroupBar-TabContextMenu");
     tab.value = groupItem.id;
     
     
-    tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(" + groupItem.id + ");");
-    tab.setAttribute("ondblclick", "objTabGroupBar.onDbClickTab(event);");
-    // tab.setAttribute("ondragstart", "objTabGroupBar.onTabDragStrart(event);");
-    /* tab.setAttribute("ondragend", "objTabGroupBar.addTab('drag end');objTabGroupBar.addTab(event.dataTransfer.dropEffect);");
-    tab.addEventListener("dragstart", function(e) {objTabGroupBar.addTab("dragstart");});
-    tab.addEventListener("dragend",   function(e) {objTabGroupBar.addTab("dragend");});
-    tab.addEventListener("dragenter", this.onTabDragOver);
-    tab.addEventListener("dragover", this.onTabDragOver); */
+    tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(event.target.value);");
+    tab.setAttribute("ondblclick", "objTabGroupBar.createRenameGroupTextBox(event.target);");
     
     tabsContainer.appendChild(tab);
 };
@@ -260,34 +253,8 @@ objTabGroupBar.clearChildren = function(node){
 };
 
 
-///////////// Drag and drop handlers /////////////
-objTabGroupBar.onTabDragStrart = function(event){
-    let tab = event.target;
-    let dt = event.dataTranfer;
-    dt.effectAllowed = "move";
-    dt.dropeffect = "move";
-    dt.setData("application/x-moz-node", tab);
-    dt.setData("text/plain", tab.getAttribute("groupid"));
-    event.stopPropagation();
-    event.preventDefault();
-};
-
-objTabGroupBar.onTabDragOver = function(event){
-    this.addTab("drop");
-    this.addTab(event.target.nodeName);
-    if(event.dataTransfer.types.contains("application/x-moz-node")){
-        event.preventDefault();
-        event.stopPropagation();
-    }
-};
-
-objTabGroupBar.onTabDrop = function(event){
-    this.addTab("tabdrop");
-};
-
 //////////////// Actions performed by toolbar elements //////////////////
 objTabGroupBar.switchGroupTo = function(groupId){
-    return false;
 
     let contentWindow = tabView.getContentWindow();
     var groupItems = contentWindow.GroupItems;
