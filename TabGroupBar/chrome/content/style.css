@@ -1,0 +1,5 @@
+﻿#TabGroupBar-ToolbarPaletteButton
+{
+    list-style-image: url("chrome://browser/content/tabview-inverted.png") !important;
+    -moz-image-region: rect(0px, 16px, 16px, 0px) !important;
+}

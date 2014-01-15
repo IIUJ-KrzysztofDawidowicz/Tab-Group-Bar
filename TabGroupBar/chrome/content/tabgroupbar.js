@@ -12,18 +12,17 @@ var objTabGroupBar = {
 };
 
 objTabGroupBar.init = function(window){
-    tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
+    var Cu = Components.utils;
+    var consoleJSM = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+    this.console = consoleJSM.console; //access exported symbol of "console" from the Console.jsm
+
+    this.tabsContainer = document.getElementById("TabGroupBar-TabBox-Tabs");
     // this.addTab("init called");
-    tabView = this.getTabView();
+    this.tabView = this.getTabView();
     this.window = window;
 
 
-    var preferences = Components.classes["@mozilla.org/preferences-service;1"]
-        .getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
-    this.hideWhenMouseIsAway = preferences.getBoolPref("hideOnMouseLeave");
-    preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
-    preferences.addObserver("", this, false);
-    preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
+    this.refreshInfo();
 
 
     this.addGlobalEventListeners();	
@@ -31,7 +30,7 @@ objTabGroupBar.init = function(window){
     if(this.hideWhenMouseIsAway){
         this.enableHideToolbarOnMouseAway();
     }
-    tabView._initFrame(this.addGroupTabs);
+    this.tabView._initFrame(this.addGroupTabs);
 };
 
 objTabGroupBar.observe = function(subject, topic, data){
@@ -81,8 +80,8 @@ objTabGroupBar.addTabContextMenuItems = function(){
 };
 
 objTabGroupBar.addGlobalEventListeners = function(){
-    let tabContainer = this.window.getBrowser().tabContainer;
-    let reloadOnEvent = function(event) {
+    var tabContainer = this.window.getBrowser().tabContainer;
+    var reloadOnEvent = function(event) {
         if(!objTabGroupBar.ignoreNextEvent)
             objTabGroupBar.reloadGroupTabs();
         objTabGroupBar.ignoreNextEvent = false;
@@ -100,7 +99,7 @@ objTabGroupBar.enableHideToolbarOnMouseAway = function(){
     
     this.hideToolbar();
     
-    let toolbox = document.getElementById("navigator-toolbox");
+    var toolbox = document.getElementById("navigator-toolbox");
     toolbox.addEventListener("mouseleave", this.hideToolbar);
     toolbox.addEventListener("mouseover", this.showToolbar);
     toolbox.addEventListener("mouseenter", this.showToolbar);
@@ -111,7 +110,7 @@ objTabGroupBar.disableHideToolbarOnMouseAway = function(){
     this.showToolbar();
     var toolbox = document.getElementById("navigator-toolbox");
     toolbox.removeEventListener("mouseleave", this.hideToolbar);
-    toolbox.removeEventListener("mouseover", this.showToolbar);
+    toolbox.removeEventListener("mouseover",  this.showToolbar);
     toolbox.removeEventListener("mouseenter", this.showToolbar);
 };
 
@@ -122,7 +121,7 @@ objTabGroupBar.disableHideToolbarOnMouseAway = function(){
 objTabGroupBar.addTab = function(label){
    var tab = document.createElement("tab");
    tab.setAttribute("label", label);
-   tabsContainer.appendChild(tab);
+   this.tabsContainer.appendChild(tab);
 }
 
 objTabGroupBar.getTabView = function() {
@@ -139,14 +138,14 @@ objTabGroupBar.getPopupSourceElement = function(event){
 
 
 objTabGroupBar.getGroupForTab = function(tab){
-    let groupId = tab.value;//parseInt(tab.getAttribute("groupid"));
-    let group = tabView.getContentWindow().GroupItems.groupItem(groupId);
-    return group;
+    return this.tabView.getContentWindow().GroupItems.groupItem(tab.value);
 };
 
 objTabGroupBar.getDomainFromURL = function(url){
     var domainFindingRegex = /:\/\/(.[^/]+)/;
     var matches = url.match(domainFindingRegex);
+    if(matches==null || matches.length<2)
+        return null;
     return matches[1];
 }
 
@@ -155,26 +154,7 @@ objTabGroupBar.getUrlForTab = function(tab){
 };
 
 objTabGroupBar.addDebugTabs = function(){
-    for(var ii = 0;i<this.debugTabs.length;i++){
-        this.addTab(this.debugTabs[i]);
-    }
     return;
-    
-    this.addTab(this.hideWhenMouseIsAway);
-    //This adds all domains found in all groups
-    this.tabView = this.getTabView();
-    var contentWindow = tabView.getContentWindow();
-    var groupItems = contentWindow.GroupItems.groupItems;
-    for (i= 0; i<groupItems.length;i++){
-        let tabs = groupItems[i].getChildren();
-        this.addTab("Group: " + groupItems[i].getTitle() + ", " + tabs.length + " tabs");
-        for(j=0; j<tabs.length;j++){
-            let url = this.getUrlForTab(tabs[j].tab);
-            // this.addTab(url);
-            this.addTab(this.getDomainFromURL(url));
-        }
-        
-    }
     
 }
 
@@ -190,29 +170,34 @@ objTabGroupBar.reloadGroupTabs = function(event){
 // Puts the tabs on the main bar
 objTabGroupBar.addGroupTabs = function(){
     this.tabView = this.getTabView();
-    let contentWindow = tabView.getContentWindow();
+    let contentWindow = this.tabView.getContentWindow();
     let groupItems = contentWindow.GroupItems.groupItems;
     let activeGroup = contentWindow.GroupItems.getActiveGroupItem();
-    for (i= 0; i<groupItems.length;i++)
+    for (let i = 0; i<groupItems.length;i++)
     {
         this.addGroupTab(groupItems[i]);
         groupItems[i].addSubscriber("close", this.reloadGroupTabs);
         this.tabsLoaded = true;
         if(groupItems[i]==activeGroup){
-              tabsContainer.selectedItem=tabsContainer.lastChild;
+              this.tabsContainer.selectedItem=this.tabsContainer.lastChild;
         }
     }
 };
 
-objTabGroupBar.addGroupTab = function(groupItem) {
+objTabGroupBar.getGroupTitle = function(groupItem){
     var title = groupItem.getTitle();
     if(!title) {
         title = "Group " + groupItem.id;
     }
+    return title;
+}
+
+objTabGroupBar.addGroupTab = function(groupItem) {
+    var title = this.getGroupTitle(groupItem);
     if(this.debug) {title = title + ":" + groupItem.id;}
     var tab = document.createElement("tab");
     tab.setAttribute("label", title);
-    tab.setAttribute("id", "TabGroupBar-GroupTab-" + groupItem.id);
+    //tab.setAttribute("id", "TabGroupBar-GroupTab-" + groupItem.id);
     tab.setAttribute("context", "TabGroupBar-TabContextMenu");
     tab.value = groupItem.id;
     
@@ -220,14 +205,14 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(event.target.value);");
     tab.setAttribute("ondblclick", "objTabGroupBar.createRenameGroupTextBox(event.target);");
     
-    tabsContainer.appendChild(tab);
+    this.tabsContainer.appendChild(tab);
 };
 
 
 objTabGroupBar.clearGroupTabs = function(){
-    while(tabsContainer.firstChild)
+    while(this.tabsContainer.firstChild)
     {
-        tabsContainer.removeChild(tabsContainer.firstChild);
+        this.tabsContainer.removeChild(this.tabsContainer.firstChild);
     }
     /* var tabs = [];
     var childNodes = tabsContainer.childNodes;
@@ -256,7 +241,7 @@ objTabGroupBar.clearChildren = function(node){
 //////////////// Actions performed by toolbar elements //////////////////
 objTabGroupBar.switchGroupTo = function(groupId){
 
-    let contentWindow = tabView.getContentWindow();
+    let contentWindow = this.tabView.getContentWindow();
     var groupItems = contentWindow.GroupItems;
     var groupToActivate = groupItems.groupItem(groupId);
     let tabItem = groupToActivate.getActiveTab();
@@ -280,19 +265,19 @@ objTabGroupBar.switchGroupTo = function(groupId){
 
 objTabGroupBar.onCloseGroupContextMenuAction  =  function(event){
     let tab = this.getPopupSourceElement(event);
-    let groupId = parseInt(tab.getAttribute("groupid"));
+    let groupId = parseInt(tab.value);
     this.closeGroup(groupId);
     this.reloadGroupTabs();
 };
 
 objTabGroupBar.closeGroup = function(groupId){
-    let group = tabView.getContentWindow().GroupItems.groupItem(groupId);
+    var group = this.tabView.getContentWindow().GroupItems.groupItem(groupId);
     group.getChildren().forEach(function(tab){tab.close();});
     group.close({immediately: true});
 };
 
 objTabGroupBar.createNewGroup = function(){
-    tabView._initFrame(function(){
+    this.tabView._initFrame(function(){
         var GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
         var newGroup =  GroupItems.newGroup();
         var blankTab = objTabGroupBar.window.getBrowser().addTab("about:blank");
@@ -370,7 +355,7 @@ objTabGroupBar.onTabListPopupShowing = function(event){
         objTabGroupBar.reloadGroupTabs();
     };
     
-    for(i=0; i<tabs.length;i++)
+    for(let i =0; i<tabs.length;i++)
     {
         let tab = tabs[i].tab;
         let item = document.createElement("menuitem");
@@ -407,11 +392,11 @@ objTabGroupBar.populateMoveAllThisDomainToGroupPopup = function(event){
         var GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
         var tabs = GroupItems.getActiveGroupItem().getChildren();
         var tabsToMove = [];
-        for(let i=0;i<tabs.length;i++){
+        for(let i =0;i<tabs.length;i++){
             if(objTabGroupBar.getDomainFromURL(objTabGroupBar.getUrlForTab(tabs[i].tab))==domain)
                 tabsToMove.push(tabs[i].tab);
         }
-        for(let i=0;i<tabsToMove.length;i++){
+        for(let i =0;i<tabsToMove.length;i++){
             GroupItems.moveTabToGroupItem(tabsToMove[i], groupId);
         }
     };
@@ -433,13 +418,13 @@ objTabGroupBar._populateMoveToGroupPopup = function(event, onCommandAction){
     var activeGroupItem = this.tabView.getContentWindow().GroupItems.getActiveGroupItem();
     var separator = document.createElement("menuseparator");
     popup.appendChild(separator);
-    for(i=0;i<groupItems.length;i++){
+    for(let i =0;i<groupItems.length;i++){
         //testNode.setAttribute("label", 1);
         let groupItem = groupItems[i];
         if(groupItem!=activeGroupItem) { //skip the tab group we're in
             //testNode.setAttribute("label", 2);
             let moveToGroupItem = document.createElement("menuitem");
-            moveToGroupItem.setAttribute("label", groupItem.getTitle());
+            moveToGroupItem.setAttribute("label", this.getGroupTitle(groupItem));
             moveToGroupItem.setAttribute("value", groupItem.id);
             //testNode.setAttribute("label", 3);
             moveToGroupItem.addEventListener("command", onCommandAction);

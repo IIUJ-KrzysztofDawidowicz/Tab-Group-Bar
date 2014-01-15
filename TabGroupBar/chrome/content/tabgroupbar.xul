@@ -1,8 +1,18 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://TabGroupBar/chrome/content/style.css" type="text/css"?>
 
 <overlay id="TabGroupBar-Overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/x-javascript"
             src="chrome://TabGroupBar/content/tabgroupbar.js" />
+  
+  <!--<toolbarpalette id="BrowserToolbarPalette" >
+    <toolbarbutton  id="TabGroupBar-ToolbarPaletteButton"
+                    class="toolbarbutton-1 chromeclass-toolbar-additional"
+                    label="TGB Toggle"
+                    oncommand="objTabGroupBar.toggleBar();"
+                    tooltiptext="Toggle Tab Group Bar"></toolbarbutton>
+  </toolbarpalette>-->
+  
   <popupset>
     <menupopup id="TabGroupBar-BarContextMenu">
       <menuitem id="TabGroupBar-BarContextMenu-NewGroup" label="New Group" tooltiptext="Add new group"
@@ -27,7 +37,8 @@
     <key id="tabgroupbar_toggle" modifiers="alt" key="g" oncommand="objTabGroupBar.toggleBar(); event.stopPropagation();"/>
       
   </keyset>
-  
+
+
 
   <toolbox id="navigator-toolbox">   <!-- Main Firefox toolbox where all the toolbars normally are -->
     <toolbar id="TabGroupBar-Toolbar"
