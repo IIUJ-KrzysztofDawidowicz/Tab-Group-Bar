@@ -8,7 +8,7 @@ var objTabGroupBar = {
     debug: false,
     ignoreNextEvent: false,
     hideWhenMouseIsAway: false,
-    debugTabs: []
+    debugTabs: [],
 };
 
 objTabGroupBar.init = function(window){
@@ -67,14 +67,16 @@ objTabGroupBar.addTabContextMenuItems = function(){
     var menu = document.createElement("menu");
     menu.setAttribute("label", "Move tab to group");
     var popup = document.createElement("menupopup");
-    popup.setAttribute("onpopupshowing", "objTabGroupBar.populateMoveToGroupPopup(event);");
+    //popup.setAttribute("onpopupshowing", "objTabGroupBar.populateMoveToGroupPopup(event);");
+    popup.addEventListener("popupshowing", function(event){ objTabGroupBar.populateMoveToGroupPopup(event);});
     menu.appendChild(popup);
     tabContextMenu.appendChild(menu);
 
     menu = document.createElement("menu");
     menu.setAttribute("label", "Move all tabs for this domain to group");
     popup = document.createElement("menupopup");
-    popup.setAttribute("onpopupshowing", "objTabGroupBar.populateMoveAllThisDomainToGroupPopup(event);");
+    //popup.setAttribute("onpopupshowing", "objTabGroupBar.populateMoveAllThisDomainToGroupPopup(event);");
+    popup.addEventListener("popupshowing", function(event) {objTabGroupBar.populateMoveAllThisDomainToGroupPopup(event);});
     menu.appendChild(popup);
     tabContextMenu.appendChild(menu);
 };
@@ -101,7 +103,7 @@ objTabGroupBar.enableHideToolbarOnMouseAway = function(){
     
     var toolbox = document.getElementById("navigator-toolbox");
     toolbox.addEventListener("mouseleave", this.hideToolbar);
-    toolbox.addEventListener("mouseover", this.showToolbar);
+    //toolbox.addEventListener("mouseover", this.showToolbar);
     toolbox.addEventListener("mouseenter", this.showToolbar);
 };
 
@@ -110,7 +112,7 @@ objTabGroupBar.disableHideToolbarOnMouseAway = function(){
     this.showToolbar();
     var toolbox = document.getElementById("navigator-toolbox");
     toolbox.removeEventListener("mouseleave", this.hideToolbar);
-    toolbox.removeEventListener("mouseover",  this.showToolbar);
+    //toolbox.removeEventListener("mouseover",  this.showToolbar);
     toolbox.removeEventListener("mouseenter", this.showToolbar);
 };
 
@@ -202,8 +204,10 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     tab.value = groupItem.id;
     
     
-    tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(event.target.value);");
-    tab.setAttribute("ondblclick", "objTabGroupBar.createRenameGroupTextBox(event.target);");
+    //tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(event.target.value);");
+    tab.addEventListener("command", function(event) {objTabGroupBar.switchGroupTo(event.target.value);});
+    //tab.setAttribute("ondblclick", "objTabGroupBar.createRenameGroupTextBox(event.target);");
+    tab.addEventListener("dblclick", function(event) {objTabGroupBar.createRenameGroupTextBox(event.target);});
     
     this.tabsContainer.appendChild(tab);
 };
@@ -301,9 +305,12 @@ objTabGroupBar.createRenameGroupTextBox = function(tab){
     tab.disabled = true;
     let textBox = document.createElement("textbox");
     textBox.setAttribute("value", groupTitle);
-    textBox.setAttribute("onkeypress", "objTabGroupBar.onKeyPressedRenameGroupTextBox(event);");
-    textBox.setAttribute("onblur", "objTabGroupBar.onBlurRenameGroupTextBox(event);");
-    textBox.setAttribute("onclick", "event.target.inputField.onclick();");
+    //textBox.setAttribute("onkeypress", "objTabGroupBar.onKeyPressedRenameGroupTextBox(event);");
+    textBox.addEventListener("keypress", function(event) {objTabGroupBar.onKeyPressedRenameGroupTextBox(event);});
+    //textBox.setAttribute("onblur", "objTabGroupBar.onBlurRenameGroupTextBox(event);");
+    textBox.addEventListener("blur", function(event) {objTabGroupBar.onBlurRenameGroupTextBox(event);});
+    //textBox.setAttribute("onclick", "event.target.inputField.onclick();");
+    textBox.addEventListener("click", function(event) {event.target.inputField.onclick();});
     textBox.clickSelectsAll = true;
     tab.appendChild(textBox);
     textBox.parent = tab;
