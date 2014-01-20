@@ -39,12 +39,11 @@ objTabGroupBar.observe = function(subject, topic, data){
     //}
     
     this.refreshInfo();
-    
-    preferences.addObserver("", this, false);
-    preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
 };
 
 objTabGroupBar.refreshInfo = function(){
+    let console = (Cu.import("resource://gre/modules/devtools/Console.jsm", {})).console;
+    console.log("Preference change");
     var preferences = Components.classes["@mozilla.org/preferences-service;1"]
         .getService(Components.interfaces.nsIPrefService).getBranch("extensions.tabgroupbar.");
     preferences.QueryInterface(Components.interfaces.nsIPrefBranch);
@@ -94,26 +93,26 @@ objTabGroupBar.addGlobalEventListeners = function(){
     window.addEventListener("tabviewhidden", reloadOnEvent);
 };
 
-objTabGroupBar.hideToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
-objTabGroupBar.showToolbar = function(event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
+objTabGroupBar.hideToolbar = function TabGroupBar__hideToolbar (event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
+objTabGroupBar.showToolbar = function TabGroupBar__showToolbar (event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "false"); };
 
 objTabGroupBar.enableHideToolbarOnMouseAway = function(){
     
     this.hideToolbar();
     
     var toolbox = document.getElementById("navigator-toolbox");
-    toolbox.addEventListener("mouseleave", this.hideToolbar);
+    toolbox.addEventListener("mouseleave", objTabGroupBar.hideToolbar);
     //toolbox.addEventListener("mouseover", this.showToolbar);
-    toolbox.addEventListener("mouseenter", this.showToolbar);
+    toolbox.addEventListener("mouseenter", objTabGroupBar.showToolbar);
 };
 
 
 objTabGroupBar.disableHideToolbarOnMouseAway = function(){
     this.showToolbar();
     var toolbox = document.getElementById("navigator-toolbox");
-    toolbox.removeEventListener("mouseleave", this.hideToolbar);
+    toolbox.removeEventListener("mouseleave", objTabGroupBar.hideToolbar);
     //toolbox.removeEventListener("mouseover",  this.showToolbar);
-    toolbox.removeEventListener("mouseenter", this.showToolbar);
+    toolbox.removeEventListener("mouseenter", objTabGroupBar.showToolbar);
 };
 
 /////////////////////// Utilities ////////////////////////////
@@ -164,6 +163,7 @@ objTabGroupBar.addDebugTabs = function(){
 
 // Takes a parameter so it can be used as an event handler
 objTabGroupBar.reloadGroupTabs = function(event){
+    this.refreshInfo();
     this.clearGroupTabs();
     this.addGroupTabs();
     this.addDebugTabs();
@@ -395,7 +395,7 @@ objTabGroupBar.populateMoveAllThisDomainToGroupPopup = function(event){
         //starting with event.target: menu item - MoveToPopup - enclosing menu - tab context menu - clicked tab
         var tab = event.target.parentNode.parentNode.parentNode.triggerNode;
         var domain = objTabGroupBar.getDomainFromURL(objTabGroupBar.getUrlForTab(tab));
-        objTabGroupBar.addTab(domain);
+        //objTabGroupBar.addTab(domain);
         var GroupItems = objTabGroupBar.tabView.getContentWindow().GroupItems;
         var tabs = GroupItems.getActiveGroupItem().getChildren();
         var tabsToMove = [];
@@ -422,6 +422,17 @@ objTabGroupBar._populateMoveToGroupPopup = function(event, onCommandAction){
     var tab = event.target.parentNode.parentNode.triggerNode;
     var domain = this.getDomainFromURL(this.getUrlForTab(tab));
     var groupItems = this.tabView.getContentWindow().GroupItems.groupItems;
+    
+    if(groupItems.length<2)
+    {	
+        let filler = document.createElement("menuitem");
+        filler.setAttribute("label", "No groups");
+        filler.setAttribute("disabled", true);
+        popup.appendChild(filler);
+        return;
+    }
+    
+    
     var activeGroupItem = this.tabView.getContentWindow().GroupItems.getActiveGroupItem();
     var separator = document.createElement("menuseparator");
     popup.appendChild(separator);
@@ -447,6 +458,7 @@ objTabGroupBar._populateMoveToGroupPopup = function(event, onCommandAction){
             }
         }
     }
+    
 };
 
 //If any of the tabs in the tab group are open to pages in the given domain, return true.
