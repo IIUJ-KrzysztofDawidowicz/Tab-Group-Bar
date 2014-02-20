@@ -49,14 +49,9 @@
                  hidden="false"
                  persist="hidden"
                 >
-      <tabbox id="TabGroupBar-TabBox">
+      <tabbox id="TabGroupBar-TabBox" flex="1">
         <arrowscrollbox orient="horizontal">
-          <tabs id="TabGroupBar-TabBox-Tabs">
-            <!--<button label="Load tabs" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
-            <!--<tab label="First tab" oncommand="objTabGroupBar.addGroupTabs(); "/>-->
-            <!--<tab label="Second tab" oncommand=""/>-->
-            <!--<tab label="Last tab"/>-->
-          </tabs>
+          <tabs id="TabGroupBar-TabBox-Tabs" flex="1"/>
         </arrowscrollbox>
 
       </tabbox>

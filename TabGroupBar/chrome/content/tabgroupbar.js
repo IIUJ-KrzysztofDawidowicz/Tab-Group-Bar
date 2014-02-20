@@ -83,14 +83,44 @@ objTabGroupBar.addTabContextMenuItems = function(){
 objTabGroupBar.addGlobalEventListeners = function(){
     var tabContainer = this.window.getBrowser().tabContainer;
     var reloadOnEvent = function(event) {
+		// let console = (Cu.import("resource://gre/modules/devtools/Console.jsm", {})).console;
+		// console.log("Reload group tabs");
         if(!objTabGroupBar.ignoreNextEvent)
             objTabGroupBar.reloadGroupTabs();
         objTabGroupBar.ignoreNextEvent = false;
     };
-    tabContainer.addEventListener("TabSelect", reloadOnEvent);
-    window.addEventListener("tabviewframeinitialized", reloadOnEvent);
-    window.addEventListener("SSTabRestored", reloadOnEvent);
-    window.addEventListener("tabviewhidden", reloadOnEvent);
+    var changeGroupTab = function(e) {
+		// let console = (Cu.import("resource://gre/modules/devtools/Console.jsm", {})).console;
+		// console.log("Change group tab");
+		if(!objTabGroupBar.ignoreNextEvent)
+			objTabGroupBar.switchGroupTo(e.target.selectedItem.value);
+		objTabGroupBar.ignoreNextEvent = false;
+	};
+	var loadOnRestore = function(event) {
+		objTabGroupBar.ignoreNextEvent = true;
+		objTabGroupBar.reloadGroupTabs();
+		objTabGroupBar.ignoreNextEvent = false;
+	};
+	var switchSelectedGroupTab = function(event) {
+		if(objTabGroupBar.ignoreNextEvent) return;
+		var activeGroupId = event.target._tabViewTabItem.parent.id;
+		var tabs = objTabGroupBar.tabsContainer.childNodes;
+		for(let i=0;i<tabs.length;i++)
+		{
+			if(tabs[i].value==activeGroupId)
+			{
+				objTabGroupBar.ignoreNextEvent = true; //Ignore the select event from this
+				objTabGroupBar.tabsContainer.selectedIndex = i;
+				objTabGroupBar.ignoreNextEvent = false; 
+				return;
+			}
+		}
+	};
+	tabContainer.addEventListener("TabSelect", switchSelectedGroupTab);
+	this.tabsContainer.addEventListener("select", changeGroupTab, false);
+    window.addEventListener("tabviewframeinitialized", loadOnRestore);
+    window.addEventListener("SSTabRestored", loadOnRestore);
+    document.addEventListener("tabviewhidden", reloadOnEvent);
 };
 
 objTabGroupBar.hideToolbar = function TabGroupBar__hideToolbar (event) { document.getElementById("TabGroupBar-Toolbar").setAttribute("collapsed", "true"); };
@@ -205,7 +235,7 @@ objTabGroupBar.addGroupTab = function(groupItem) {
     
     
     //tab.setAttribute("oncommand", "objTabGroupBar.switchGroupTo(event.target.value);");
-    tab.addEventListener("command", function(event) {objTabGroupBar.switchGroupTo(event.target.value);});
+    //tab.addEventListener("command", function(event) {objTabGroupBar.switchGroupTo(event.target.value);});
     //tab.setAttribute("ondblclick", "objTabGroupBar.createRenameGroupTextBox(event.target);");
     tab.addEventListener("dblclick", function(event) {objTabGroupBar.createRenameGroupTextBox(event.target);});
     
